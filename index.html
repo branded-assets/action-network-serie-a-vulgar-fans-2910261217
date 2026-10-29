@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Serie A Fangemeinden</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B0D12;
+    --panel:#12151C;
+    --panel2:#171B24;
+    --line: rgba(236,233,225,0.10);
+    --line-strong: rgba(236,233,225,0.18);
+    --chalk:#ECE9E1;
+    --dim:#8A93A6;
+    --orange:#FF6A3D;
+    --orange-dim: rgba(255,106,61,0.18);
+    --foul:#E23B4E;
+    --foul-dim: rgba(226,59,78,0.16);
+    --blue:#4C8DFF;
+    --blue-dim: rgba(76,141,255,0.16);
+    --green:#3DDC97;
+    --gold:#FFC145;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:transparent;}
+  .wrap{
+    width:100%;
+    max-width:900px;
+    margin:0 auto;
+    background: var(--ink);
+    color:var(--chalk);
+    font-family:'Inter',sans-serif;
+    border:1px solid var(--line-strong);
+    border-radius:14px;
+    overflow:hidden;
+    position:relative;
+  }
+
+  header{
+    position:relative; z-index:2;
+    padding:26px 34px 22px;
+    border-bottom:1px solid var(--line);
+  }
+  h1{
+    font-family:'Anton',sans-serif;
+    font-weight:400;
+    text-transform:uppercase;
+    font-size:40px;
+    line-height:0.98;
+    letter-spacing:0.5px;
+    margin:0 0 8px;
+  }
+  h1 .white{color:var(--chalk);}
+  h1 .accent{color:var(--foul);}
+  .sub{
+    font-size:14px; color:var(--dim); max-width:620px; line-height:1.5;
+  }
+
+  .switch-label{
+    position:relative; z-index:2;
+    font-family:'Space Mono',monospace;
+    font-size:15px; letter-spacing:1.8px; text-transform:uppercase;
+    color:var(--chalk); font-weight:700;
+    padding:20px 34px 0;
+  }
+
+  nav.tabs{
+    position:relative; z-index:2;
+    display:flex; flex-wrap:wrap; gap:8px;
+    padding:10px 34px 0;
+  }
+  .tab{
+    font-family:'Space Mono',monospace;
+    font-size:11.5px; letter-spacing:1.4px; text-transform:uppercase;
+    font-weight:700;
+    color:var(--dim);
+    background:var(--panel2);
+    border:1px solid var(--line-strong);
+    padding:9px 14px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:all .18s ease;
+    user-select:none;
+  }
+  .tab:hover{ color:var(--chalk); border-color:rgba(236,233,225,0.3); }
+  .tab.active{
+    color:var(--ink);
+    background:var(--chalk);
+    border-color:var(--chalk);
+  }
+  .tab.active[data-tone="foul"]{ background:var(--foul); color:#fff; border-color:var(--foul);}
+  .tab.active[data-tone="neg"]{ background:var(--orange); color:#1a0a03; border-color:var(--orange);}
+  .tab.active[data-tone="pos"]{ background:var(--blue); color:#fff; border-color:var(--blue);}
+  .tab.active[data-tone="polite"]{ background:var(--green); color:#08160f; border-color:var(--green);}
+  .tab.active[data-tone="kw"]{ background:var(--gold); color:#1a0a03; border-color:var(--gold);}
+
+  .panel-meta{
+    position:relative; z-index:2;
+    padding:20px 34px 0;
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-family:'Space Mono',monospace;
+  }
+  .panel-title{ font-size:13px; letter-spacing:1.5px; text-transform:uppercase; color:var(--chalk); font-weight:700;}
+  .panel-note{ font-size:11px; color:var(--dim);}
+
+  main{ position:relative; z-index:2; padding:14px 34px 6px; }
+
+  .row{
+    display:grid;
+    grid-template-columns:34px 1fr 150px;
+    align-items:center;
+    gap:14px;
+    padding:9px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .row:last-child{border-bottom:none;}
+  .rank{
+    font-family:'Space Mono',monospace;
+    font-weight:700; font-size:13px;
+    color:var(--dim);
+    width:34px; height:24px;
+    display:flex; align-items:center; justify-content:center;
+    border-radius:4px;
+  }
+  .row.top .rank{ background:var(--foul); color:#fff; }
+  .row.top.neg .rank{ background:var(--orange); color:#1a0a03; }
+  .row.top.pos .rank{ background:var(--blue); color:#fff; }
+  .row.top.polite .rank{ background:var(--green); color:#08160f; }
+  .row.top.kw .rank{ background:var(--gold); color:#1a0a03; }
+  .team-line{ min-width:0; }
+  .team-name{
+    font-size:14.5px; font-weight:600; letter-spacing:0.2px;
+    display:flex; align-items:center; gap:8px;
+    margin-bottom:5px;
+  }
+  .row.top .team-name{ font-weight:800; }
+  .bar-track{
+    position:relative;
+    height:9px; border-radius:5px;
+    background:rgba(236,233,225,0.07);
+    overflow:hidden;
+  }
+  .bar-fill{
+    position:absolute; left:0; top:0; bottom:0;
+    border-radius:5px;
+    background:linear-gradient(90deg, var(--foul), #ff7a52);
+    transition:width .5s ease;
+  }
+  .bar-fill.pos{ background:linear-gradient(90deg, #2f6fd6, var(--blue)); }
+  .bar-fill.polite{ background:linear-gradient(90deg, #2bb989, var(--green)); }
+  .bar-fill.neg{ background:linear-gradient(90deg, var(--orange), #ffb066); }
+  .bar-fill.kw{ background:linear-gradient(90deg, #c99a1a, var(--gold)); }
+  .pct{
+    font-family:'Space Mono',monospace;
+    font-weight:700; font-size:15px; text-align:right;
+    color:var(--chalk);
+  }
+  .row.top .pct{ color:var(--foul); }
+  .row.top.neg .pct{ color:var(--orange); }
+  .row.top.pos .pct{ color:var(--blue); }
+  .row.top.polite .pct{ color:var(--green); }
+  .row.top.kw .pct{ color:var(--gold); }
+  .subtxt{
+    font-family:'Space Mono',monospace;
+    font-size:10px; color:var(--dim); text-align:right;
+  }
+
+  /* Excluded-team rows (no subreddit / insufficient comments) */
+  .status-row{
+    display:grid;
+    grid-template-columns:34px 1fr auto;
+    align-items:center;
+    gap:14px;
+    padding:9px 0;
+    border-bottom:1px solid var(--line);
+    opacity:0.6;
+  }
+  .status-row:last-child{ border-bottom:none; }
+  .status-team{ font-size:14px; font-weight:600; color:var(--dim); }
+  .status-tag{
+    font-family:'Space Mono',monospace;
+    font-size:10px; letter-spacing:0.6px; text-transform:uppercase;
+    color:var(--dim);
+    background:var(--panel2);
+    border:1px solid var(--line-strong);
+    padding:4px 10px;
+    border-radius:6px;
+    white-space:nowrap;
+  }
+  .excluded-heading{
+    font-family:'Space Mono',monospace;
+    font-size:10.5px; letter-spacing:1px; text-transform:uppercase;
+    color:var(--dim);
+    padding:16px 0 6px;
+    border-top:1px solid var(--line-strong);
+    margin-top:6px;
+  }
+
+  footer{
+    position:relative; z-index:2;
+    padding:20px 34px 26px;
+    display:flex; align-items:center; justify-content:space-between;
+    margin-top:8px;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .footer-line{
+    font-family:'Space Mono',monospace;
+    font-size:10px; color:var(--dim); letter-spacing:0.5px;
+  }
+  .brand{
+    font-family:'Anton',sans-serif;
+    font-size:15px; letter-spacing:0.5px;
+    color:var(--chalk);
+  }
+
+  .trophy{ font-size:14px; }
+
+  @media (max-width:560px){
+    h1{ font-size:28px; }
+    header, .switch-label, nav.tabs, .panel-meta, main, footer{ padding-left:18px; padding-right:18px; }
+  }
+
+  /* --- Only needed if building a language switch (delete otherwise) --- */
+  .lang-switch{
+    display:flex; gap:14px; margin-bottom:22px; flex-wrap:wrap;
+  }
+  .lang-btn{
+    font-family:'Anton',sans-serif;
+    font-weight:400;
+    font-size:22px;
+    letter-spacing:0.5px;
+    text-transform:uppercase;
+    color:var(--dim);
+    background:var(--panel2);
+    border:1px solid var(--line-strong);
+    padding:10px 22px;
+    border-radius:10px;
+    cursor:pointer;
+    transition:all .15s ease;
+    user-select:none;
+    line-height:1;
+  }
+  .lang-btn:hover{ color:var(--chalk); border-color:rgba(236,233,225,0.3); }
+  .lang-btn.active{
+    color:var(--ink); background:var(--chalk); border-color:var(--chalk);
+  }
+  @media (max-width:560px){
+    .lang-btn{ font-size:16px; padding:8px 16px; }
+  }
+  .row.alpha{grid-template-columns:1fr auto;padding:11px 0;}
+  .row.alpha .team-name{margin-bottom:0;font-weight:600;}
+  .kw-tag{font-family:'Space Mono',monospace;font-weight:700;color:var(--gold);background:rgba(255,193,69,0.16);border:1px solid rgba(255,193,69,0.35);padding:4px 12px;border-radius:5px;font-size:12px;}
+  .row.alpha .rank{display:none;}
+</style>
+</head>
+<body>
+<div class="wrap" id="card">
+  <header>
+    <div class="lang-switch" id="langSwitch">
+      <div class="lang-btn active" data-lang="de">Auf Deutsch</div>
+      <div class="lang-btn" data-lang="en">In English</div>
+      <div class="lang-btn" data-lang="it">In Italiano</div>
+    </div>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+  </header>
+  <div class="switch-label" id="switchLabel"></div>
+  <nav class="tabs" id="tabs">
+    <div class="tab active" data-tone="foul" data-view="vulgar"></div>
+    <div class="tab" data-tone="neg" data-view="negative"></div>
+    <div class="tab" data-tone="kw" data-view="keywords"></div>
+    <div class="tab" data-tone="pos" data-view="positive"></div>
+    <div class="tab" data-tone="polite" data-view="polite"></div>
+  </nav>
+  <div class="panel-meta"><span class="panel-title" id="panelTitle"></span><span class="panel-note" id="panelNote"></span></div>
+  <main id="main"></main>
+  <footer><span class="footer-line" id="footerDate"></span><span class="brand">Wettbasis.com</span></footer>
+</div>
+<script>
+const DATA = {"vulgar": [{"team": "AC Milan", "vulgar_pct": 14.63, "vulgar_count": 6509, "total": 44484}, {"team": "Juventus", "vulgar_pct": 14.32, "vulgar_count": 5509, "total": 38476}, {"team": "Inter Milan", "vulgar_pct": 13.33, "vulgar_count": 3918, "total": 29396}, {"team": "Napoli", "vulgar_pct": 12.84, "vulgar_count": 2382, "total": 18548}, {"team": "AS Roma", "vulgar_pct": 12.44, "vulgar_count": 2578, "total": 20716}, {"team": "Venezia", "vulgar_pct": 11.34, "vulgar_count": 196, "total": 1728}, {"team": "Lazio", "vulgar_pct": 10.92, "vulgar_count": 618, "total": 5657}, {"team": "Atalanta", "vulgar_pct": 9.35, "vulgar_count": 260, "total": 2782}, {"team": "Udinese", "vulgar_pct": 9.32, "vulgar_count": 336, "total": 3605}, {"team": "Fiorentina", "vulgar_pct": 9.13, "vulgar_count": 606, "total": 6637}, {"team": "Bologna", "vulgar_pct": 8.41, "vulgar_count": 285, "total": 3390}, {"team": "Como", "vulgar_pct": 8.35, "vulgar_count": 140, "total": 1677}], "polite": [{"team": "Como", "vulgar_pct": 8.35, "vulgar_count": 140, "total": 1677}, {"team": "Bologna", "vulgar_pct": 8.41, "vulgar_count": 285, "total": 3390}, {"team": "Fiorentina", "vulgar_pct": 9.13, "vulgar_count": 606, "total": 6637}, {"team": "Udinese", "vulgar_pct": 9.32, "vulgar_count": 336, "total": 3605}, {"team": "Atalanta", "vulgar_pct": 9.35, "vulgar_count": 260, "total": 2782}, {"team": "Lazio", "vulgar_pct": 10.92, "vulgar_count": 618, "total": 5657}, {"team": "Venezia", "vulgar_pct": 11.34, "vulgar_count": 196, "total": 1728}, {"team": "AS Roma", "vulgar_pct": 12.44, "vulgar_count": 2578, "total": 20716}, {"team": "Napoli", "vulgar_pct": 12.84, "vulgar_count": 2382, "total": 18548}, {"team": "Inter Milan", "vulgar_pct": 13.33, "vulgar_count": 3918, "total": 29396}, {"team": "Juventus", "vulgar_pct": 14.32, "vulgar_count": 5509, "total": 38476}, {"team": "AC Milan", "vulgar_pct": 14.63, "vulgar_count": 6509, "total": 44484}], "negative": [{"team": "Napoli", "neg": 57.15, "neg_count": 10600, "total": 18548}, {"team": "Juventus", "neg": 56.55, "neg_count": 21759, "total": 38476}, {"team": "AC Milan", "neg": 56.1, "neg_count": 24956, "total": 44484}, {"team": "Inter Milan", "neg": 52.45, "neg_count": 15419, "total": 29396}, {"team": "AS Roma", "neg": 50.18, "neg_count": 10395, "total": 20716}, {"team": "Lazio", "neg": 43.73, "neg_count": 2474, "total": 5657}, {"team": "Venezia", "neg": 43.63, "neg_count": 754, "total": 1728}, {"team": "Fiorentina", "neg": 43.05, "neg_count": 2857, "total": 6637}, {"team": "Udinese", "neg": 40.28, "neg_count": 1452, "total": 3605}, {"team": "Bologna", "neg": 39.2, "neg_count": 1329, "total": 3390}, {"team": "Atalanta", "neg": 38.57, "neg_count": 1073, "total": 2782}, {"team": "Como", "neg": 33.45, "neg_count": 561, "total": 1677}], "positive": [{"team": "Udinese", "pos": 37.09, "pos_count": 1337, "total": 3605}, {"team": "Bologna", "pos": 35.66, "pos_count": 1209, "total": 3390}, {"team": "Como", "pos": 33.69, "pos_count": 565, "total": 1677}, {"team": "Atalanta", "pos": 28.07, "pos_count": 781, "total": 2782}, {"team": "Lazio", "pos": 26.66, "pos_count": 1508, "total": 5657}, {"team": "Venezia", "pos": 24.94, "pos_count": 431, "total": 1728}, {"team": "AS Roma", "pos": 24.53, "pos_count": 5082, "total": 20716}, {"team": "Fiorentina", "pos": 22.68, "pos_count": 1505, "total": 6637}, {"team": "Inter Milan", "pos": 22.2, "pos_count": 6527, "total": 29396}, {"team": "Napoli", "pos": 19.87, "pos_count": 3685, "total": 18548}, {"team": "AC Milan", "pos": 19.43, "pos_count": 8642, "total": 44484}, {"team": "Juventus", "pos": 17.75, "pos_count": 6828, "total": 38476}], "keywords": [{"team": "AC Milan", "word": "Sh*t"}, {"team": "AS Roma", "word": "Sh*t"}, {"team": "Atalanta", "word": "Sh*t"}, {"team": "Bologna", "word": "Sh*t"}, {"team": "Como", "word": "Sh*t"}, {"team": "Fiorentina", "word": "Sh*t"}, {"team": "Inter Milan", "word": "Sh*t"}, {"team": "Juventus", "word": "Sh*t"}, {"team": "Lazio", "word": "Sh*t"}, {"team": "Napoli", "word": "Sh*t"}, {"team": "Udinese", "word": "F**k"}, {"team": "Venezia", "word": "Sh*t"}]};
+const EXCLUDED = ["Cagliari","Frosinone", "Genoa", "Lecce", "Monza", "Parma", "Sassuolo", "Torino"]; // all below 1,000 comments
+const TROPHIES = ["\u{1F947}","\u{1F948}","\u{1F949}"];
+
+// ---- EDIT HERE: analysis period + final date (per language) ----
+const META = {
+  finalDate: { de: "November 2026", en: "November 2026", it: "novembre 2026" }
+};
+const TOTAL_COMMENTS = "179,000";
+
+// Club names per language. Base names (English) are used as keys; only overrides listed.
+const DE_NAMES = {
+  "AC Milan":"AC Mailand","AS Roma":"AS Rom","Atalanta":"Atalanta Bergamo","Bologna":"FC Bologna",
+  "Fiorentina":"AC Florenz","Inter Milan":"Inter Mailand","Juventus":"Juventus Turin","Lazio":"Lazio Rom",
+  "Napoli":"SSC Neapel","Genoa":"CFC Genua","Torino":"FC Turin"
+};
+const IT_NAMES = { "AC Milan":"Milan","AS Roma":"Roma","Inter Milan":"Inter" };
+let currentLang = "de", currentView = "vulgar";
+function displayTeam(n){
+  if(currentLang==="de" && DE_NAMES[n]) return DE_NAMES[n];
+  if(currentLang==="it" && IT_NAMES[n]) return IT_NAMES[n];
+  return n;
+}
+
+const I18N = {
+  de: {
+    title1:"Datenanalyse:", title2:"Die unflätigsten & negativsten Serie-A-Fangemeinden",
+    sub:()=>`Basierend auf einer Analyse von über ${TOTAL_COMMENTS.replace(",",".")} Fan-Kommentaren aus den Subreddits der Serie-A-Clubs der letzten 12 Monate, geprüft auf Schimpfwörter und Stimmung.`,
+    switchLabel:"Zwischen den Abschnitten wechseln, um den vollständigen Bericht zu erkunden",
+    tabs:{vulgar:"Die unflätigsten Fangemeinden",negative:"Die negativsten Fangemeinden",keywords:"Meistgenutztes Schimpfwort pro Fangemeinde",positive:"Die positivsten Fangemeinden",polite:"Die höflichsten Fangemeinden"},
+    panel:{
+      vulgar:{title:"Sortiert nach % der Kommentare mit Schimpfwörtern",note:"Hoch \u2192 Niedrig"},
+      negative:{title:"Sortiert nach % der Kommentare mit negativer Stimmung",note:"Hoch \u2192 Niedrig"},
+      keywords:{title:"Meistgenutztes Schimpfwort je Fangemeinde",note:"Alphabetisch"},
+      positive:{title:"Sortiert nach % der Kommentare mit positiver Stimmung",note:"Hoch \u2192 Niedrig"},
+      polite:{title:"Sortiert nach % der Kommentare mit Schimpfwörtern",note:"Niedrig \u2192 Hoch"}
+    },
+    sub_labels:{vulgar:"vulgäre Kommentare",negative:"negative Kommentare",positive:"positive Kommentare"},
+    excludedHeading:"Nicht im Ranking enthalten", tag:"Zu wenig Kommentare (min. 1.000)",
+    footerDate:()=>`Endgültiges Analysedatum: ${META.finalDate.de}`, loc:"de"
+  },
+  en: {
+    title1:"Data Analysis:", title2:"The Most Foul-Mouthed & Negative Serie A Fandoms",
+    sub:()=>`Based on an analysis of over ${TOTAL_COMMENTS} fan comments across Serie A club subreddits over the last 12 months, screened for profanity and sentiment.`,
+    switchLabel:"Switch between sections to explore the full report",
+    tabs:{vulgar:"The Most Foul-Mouthed Fandoms",negative:"The Most Negative Fandoms",keywords:"Most Used Swear Word Per Fandom",positive:"The Most Positive Fandoms",polite:"The Most Polite Fandoms"},
+    panel:{
+      vulgar:{title:"Ranked by % of comments containing profanity",note:"High \u2192 Low"},
+      negative:{title:"Ranked by % of negative-sentiment comments",note:"High \u2192 Low"},
+      keywords:{title:"Most used swear word per fandom",note:"Alphabetical"},
+      positive:{title:"Ranked by % of positive-sentiment comments",note:"High \u2192 Low"},
+      polite:{title:"Ranked by % of comments containing profanity",note:"Low \u2192 High"}
+    },
+    sub_labels:{vulgar:"vulgar comments",negative:"negative comments",positive:"positive comments"},
+    excludedHeading:"Not included in the ranking", tag:"Not enough comments (min. 1,000)",
+    footerDate:()=>`Final date of analysis: ${META.finalDate.en}`, loc:"en"
+  },
+  it: {
+    title1:"Analisi dei dati:", title2:"Le tifoserie più volgari e negative della Serie A",
+    sub:()=>`Basata sull'analisi di oltre ${TOTAL_COMMENTS.replace(",",".")} commenti dei tifosi nei subreddit dei club di Serie A negli ultimi 12 mesi, esaminati per linguaggio volgare e sentiment.`,
+    switchLabel:"Passa da una sezione all'altra per esplorare il report completo",
+    tabs:{vulgar:"Le tifoserie più volgari",negative:"Le tifoserie più negative",keywords:"Parolaccia più usata per tifoseria",positive:"Le tifoserie più positive",polite:"Le tifoserie più educate"},
+    panel:{
+      vulgar:{title:"In base alla % di commenti con parolacce",note:"Alto \u2192 Basso"},
+      negative:{title:"In base alla % di commenti con sentiment negativo",note:"Alto \u2192 Basso"},
+      keywords:{title:"Parolaccia più usata per tifoseria",note:"Ordine alfabetico"},
+      positive:{title:"In base alla % di commenti con sentiment positivo",note:"Alto \u2192 Basso"},
+      polite:{title:"In base alla % di commenti con parolacce",note:"Basso \u2192 Alto"}
+    },
+    sub_labels:{vulgar:"commenti volgari",negative:"commenti negativi",positive:"commenti positivi"},
+    excludedHeading:"Non inclusi nella classifica", tag:"Commenti insufficienti (min. 1.000)",
+    footerDate:()=>`Data finale dell'analisi: ${META.finalDate.it}`, loc:"it"
+  }
+};
+
+function fmtPct(n){
+  const s=n.toFixed(2);
+  if(currentLang==="en") return s+"%";
+  if(currentLang==="de") return s.replace(".",",")+"\u00A0%";
+  return s.replace(".",",")+"%";
+}
+function fmtInt(n){
+  const sep = currentLang==="en" ? "," : ".";
+  return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, sep);
+}
+function sortedAlpha(rows){
+  const loc = currentLang==="de" ? "de" : (currentLang==="it" ? "it" : "en");
+  return rows.slice().sort((a,b)=>displayTeam(a.team).localeCompare(displayTeam(b.team),loc));
+}
+
+function renderList(view){
+  const t=I18N[currentLang], rows=DATA[view];
+  let maxVal=0;
+  if(view==="vulgar"||view==="polite") maxVal=Math.max(...rows.map(r=>r.vulgar_pct));
+  if(view==="negative") maxVal=Math.max(...rows.map(r=>r.neg));
+  if(view==="positive") maxVal=Math.max(...rows.map(r=>r.pos));
+  let html="", rank=0;
+  rows.forEach(r=>{
+    rank++; const isTop=rank<=3; let val,cnt,lab;
+    if(view==="vulgar"||view==="polite"){val=r.vulgar_pct;cnt=r.vulgar_count;lab=t.sub_labels.vulgar;}
+    if(view==="negative"){val=r.neg;cnt=r.neg_count;lab=t.sub_labels.negative;}
+    if(view==="positive"){val=r.pos;cnt=r.pos_count;lab=t.sub_labels.positive;}
+    const tone=view==="positive"?"pos":(view==="polite"?"polite":(view==="negative"?"neg":""));
+    html+=`<div class="row ${isTop?'top '+tone:''}">
+      <div class="rank">${isTop?'<span class="trophy">'+TROPHIES[rank-1]+'</span>':rank}</div>
+      <div class="team-line"><div class="team-name">${displayTeam(r.team)}</div>
+      <div class="bar-track"><div class="bar-fill ${tone}" style="width:${(val/maxVal*100).toFixed(1)}%"></div></div></div>
+      <div><div class="pct">${fmtPct(val)}</div><div class="subtxt">${fmtInt(cnt)} ${lab}</div></div></div>`;
+  });
+  return html+renderExcluded();
+}
+function renderKeywords(){
+  let html="";
+  sortedAlpha(DATA.keywords).forEach(r=>{
+    html+=`<div class="row alpha"><div class="team-name">${displayTeam(r.team)}</div><div><span class="kw-tag">${r.word}</span></div></div>`;
+  });
+  return html+renderExcluded();
+}
+function renderExcluded(){
+  const t=I18N[currentLang];
+  let html=`<div class="excluded-heading">${t.excludedHeading}</div>`;
+  sortedAlpha(EXCLUDED.map(n=>({team:n}))).forEach(r=>{
+    html+=`<div class="status-row"><div></div><div class="status-team">${displayTeam(r.team)}</div><div class="status-tag">${t.tag}</div></div>`;
+  });
+  return html;
+}
+function setView(view){
+  currentView=view; const t=I18N[currentLang], cfg=t.panel[view];
+  document.getElementById('panelTitle').textContent=cfg.title;
+  document.getElementById('panelNote').textContent=cfg.note;
+  document.getElementById('main').innerHTML= view==="keywords"?renderKeywords():renderList(view);
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.view===view));
+}
+function setLang(lang){
+  currentLang=lang; const t=I18N[lang];
+  document.documentElement.lang=lang;
+  document.getElementById('h1').innerHTML=`<span class="white">${t.title1}</span> <span class="accent">${t.title2}</span>`;
+  document.getElementById('sub').textContent=t.sub();
+  document.getElementById('switchLabel').textContent=t.switchLabel;
+  document.getElementById('footerDate').textContent=t.footerDate();
+  document.querySelectorAll('.tab').forEach(x=>x.textContent=t.tabs[x.dataset.view]);
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang));
+  setView(currentView);
+}
+document.querySelectorAll('.tab').forEach(x=>x.addEventListener('click',()=>setView(x.dataset.view)));
+document.querySelectorAll('.lang-btn').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.lang)));
+setLang('de');
+</script>
+</body>
+</html>
